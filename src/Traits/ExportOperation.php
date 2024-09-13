@@ -36,7 +36,7 @@ trait ExportOperation
     public function getExportFilename(): string
     {
         $title = $this->crud->route;
-        return 'Export-'.ucfirst($title).'-'.date('Y-m-d');
+        return 'Export-'.ucfirst($title).'-'.date('Y-m-d H:i:s');
     }
 
     public function export()
