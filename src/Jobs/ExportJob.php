@@ -68,11 +68,11 @@ class ExportJob implements ShouldQueue
             foreach ($this->fetchData($client, $endpointToExport, $columns) as $rowData) {
                 $sheet->writeRow($rowData, ['height' => 20]);
             }
-            $filePath = "app/public/$this->fileName.xlsx";
-            $excel->saveTo($filePath);
+            $filePath = "public/$this->fileName.xlsx";
+            $excel->saveTo('app/'.$filePath);
 
             Bus::chain([
-                fn() => Mail::to($email)->send(new SendEmail($filePath)),
+                fn() => Mail::to($email)->send(new SendEmail('app/'.$filePath)),
                 fn() => Storage::exists($filePath) ? Storage::delete($filePath) : null,
             ])
             ->onConnection(config('backpack.operations.backpack-export.queueConnection'))
