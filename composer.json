@@ -3,6 +3,7 @@
     "description": "A Laravel package to export data from Backpack admin panel list pages and send it via email as an Excel file. This package allows easy integration into any Backpack-based project, enabling administrators to export filtered or full data directly from the admin panel and receive the exported file via email.",
     "keywords": ["laravel", "backpack", "export", "email", "excel", "admin panel", "data export"],
     "type": "library",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Kkboranbay\\BackpackExport\\": "src/"
