@@ -4,6 +4,10 @@ This package is designed to address limitations in Laravel Backpack's built-in e
 
 Existing export packages for Laravel Backpack fall short in several ways—some suffer from memory leaks, others don't support email delivery, and many fail to work with filtered data or fields utilizing closures in `setupListOperation`. This package solves these issues by enabling seamless export of all or filtered data, delivering the exported files via email, all while avoiding memory leaks and handling closures without errors.
 
+## Note
+
+This package is designed to work only for Backpack Pro users.
+
 ### Environment Variables
 
 Add the following variables to your `.env` file. It is necessary to fill in these variables for the package to function correctly:
