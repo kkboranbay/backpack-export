@@ -68,16 +68,16 @@ class ExportJob implements ShouldQueue
             foreach ($this->fetchData($client, $endpointToExport, $columns) as $rowData) {
                 $sheet->writeRow($rowData, ['height' => 20]);
             }
-            $filePath = storage_path("app/public/$this->fileName.xlsx");
+            $filePath = "app/public/$this->fileName.xlsx";
             $excel->saveTo($filePath);
 
             Bus::chain([
                 fn() => Mail::to($email)->send(new SendEmail($filePath)),
                 fn() => Storage::exists($filePath) ? Storage::delete($filePath) : null,
             ])
-            ->dispatch()
             ->onConnection(config('backpack.operations.backpack-export.queueConnection'))
-            ->onQueue(config('backpack.operations.backpack-export.onQueue'));
+            ->onQueue(config('backpack.operations.backpack-export.onQueue'))
+            ->dispatch();
         } catch (\Throwable $exception) {
             Log::error('Error: Export from Admin Panel', [
                 'route' => $this->route,

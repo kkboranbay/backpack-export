@@ -1,6 +1,6 @@
 <?php
 
-namespace Kkboranbay\BackpackExport\Traits\Operations;
+namespace Kkboranbay\BackpackExport\Traits;
 
 use Illuminate\Support\Facades\Route;
 use Kkboranbay\BackpackExport\Jobs\ExportJob;
