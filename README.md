@@ -8,7 +8,7 @@ Existing export packages for Laravel Backpack fall short in several ways—some 
 
 This package is designed to work only for Backpack Pro users.
 
-### Environment Variables
+## Environment Variables
 
 Add the following variables to your `.env` file. It is necessary to fill in these variables for the package to function correctly:
 
