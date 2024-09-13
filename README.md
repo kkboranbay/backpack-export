@@ -77,7 +77,7 @@ Contributions are welcome! If you find any bugs or have suggestions for improvem
 
 ### License
 
-This package is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+This package is licensed under the MIT License. See the [LICENSE](LICENSE.md) file for more details.
 
 ---
 
