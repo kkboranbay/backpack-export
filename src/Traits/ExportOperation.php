@@ -22,7 +22,7 @@ trait ExportOperation
         $this->crud->operation(['list', 'export'], function () {
             $this->crud->loadDefaultOperationSettingsFromConfig();
             $this->crud->set('export.exportTypes', $this->getExportTypes());
-            $this->crud->addButton('top', 'export', 'view', 'backpack-export::export', 'end');
+            $this->crud->addButton('top', 'export', 'view', 'backpack-export::buttons.export', 'end');
         });
     }
 
