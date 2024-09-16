@@ -5,6 +5,7 @@ namespace Kkboranbay\BackpackExport\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class SendEmail extends Mailable
 {
@@ -20,6 +21,10 @@ class SendEmail extends Mailable
                     ->subject('Exported Data');
 
         $mail->attach(storage_path($this->filePath));
+
+        Log::channel('domain')->info('BackpackExport Mail: ', [
+            'filePath' => $this->filePath,
+        ]);
 
         return $mail;
     }

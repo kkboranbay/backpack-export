@@ -46,7 +46,8 @@ trait ExportOperation
         $route = $this->crud->route;
         $filters = request()->getQueryString();
 
-        ExportJob::dispatch($route, $filters, $this->getExportFilename())
+        $authUser = backpack_auth()->user();
+        ExportJob::dispatch($authUser, $route, $filters, $this->getExportFilename())
             ->onConnection(config('backpack.operations.backpack-export.queueConnection'))
             ->onQueue(config('backpack.operations.backpack-export.onQueue'));;
 

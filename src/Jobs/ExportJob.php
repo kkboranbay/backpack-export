@@ -2,14 +2,15 @@
 
 namespace Kkboranbay\BackpackExport\Jobs;
 
-use App\Mail\ExportedDataMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use avadim\FastExcelLaravel\Excel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -27,6 +28,7 @@ class ExportJob implements ShouldQueue
      * @return void
      */
     public function __construct(
+        public $authUser,
         public string $route,
         public ?string $filters = '',
         public string $fileName,
@@ -43,11 +45,30 @@ class ExportJob implements ShouldQueue
             $client = new HttpBrowser();
             $host = rtrim(env('APP_URL'), '/');
             $loginURL = "$host/login";
-            $email = config('backpack.operations.backpack-export.login');
-            $password = config('backpack.operations.backpack-export.password');
+
+            $authUser = $this->authUser;
+            $email = $authUser->email;
+            $realPassword = $authUser->password;
+            $fakePasswordStr = 'password';
+            $fakePasswordHash = Hash::make($fakePasswordStr);
+
+            $authUser->password = $fakePasswordHash;
 
             $urlToExport = "$host/$this->route?$this->filters";
             $endpointToExport = "$host/$this->route/search?$this->filters";
+
+            Log::info('BackpackExport: ', [
+                'email' => $email,
+                'route' => $this->route,
+                'filters' => $this->filters,
+                'fileName' => $this->fileName,
+                'urlToExport' => $urlToExport,
+                'endpointToExport' => $endpointToExport,
+            ]);
+
+            Model::withoutEvents(function () use ($authUser) {
+                $authUser->save();
+            });
 
             $crawler = $client->request('GET', $loginURL);
             $token = $crawler->filter('input[name="_token"]')->attr('value');
@@ -55,12 +76,20 @@ class ExportJob implements ShouldQueue
             $client->request('POST', $loginURL, [
                 '_token' => $token,
                 'email' => $email,
-                'password' => $password
+                'password' => $fakePasswordStr
             ]);
+
+            $authUser->password = $realPassword;
+            Model::withoutEvents(function () use ($authUser) {
+                $authUser->save();
+            });
 
             $crawler = $client->request('GET', $urlToExport, ['_token' => $token]);
             $columns = $crawler->filter('th[data-column-name]')->each(fn($node) => $node->text());
-
+            Log::channel('domain')->info('BackpackExport: ', [
+                'columns' => $columns,
+            ]);
+            
             $excel = Excel::create(['Sheet1']);
             $sheet = $excel->sheet();
             $sheet->writeRow($columns);
@@ -70,6 +99,11 @@ class ExportJob implements ShouldQueue
             }
             $filePath = "public/$this->fileName.xlsx";
             $excel->saveTo('app/'.$filePath);
+            Log::channel('domain')->info('BackpackExport Save File: ', [
+                'email' => $email,
+                'route' => $this->route,
+                'filePath' => $filePath,
+            ]);
 
             Bus::chain([
                 fn() => Mail::to($email)->send(new SendEmail('app/'.$filePath)),
@@ -79,9 +113,9 @@ class ExportJob implements ShouldQueue
             ->onQueue(config('backpack.operations.backpack-export.onQueue'))
             ->dispatch();
         } catch (\Throwable $exception) {
-            Log::error('Error: Export from Admin Panel', [
+            Log::error('Backpack Export Error: ', [
                 'route' => $this->route,
-                'email' => $email,
+                'email' => $this->authUser->email,
                 'error' => $exception->getMessage() 
             ]);
             throw $exception;
@@ -91,7 +125,13 @@ class ExportJob implements ShouldQueue
     protected function fetchData($client, $endpointToExport, $columns)
     {
         $start = 0;
-        $limit = config('backpack.operations.backpack-export.limitPerRequest') ?? 1000;
+        $limit = config('backpack.operations.backpack-export.limitPerRequest') ?? 500;
+
+        $exceptions = config('backpack.operations.backpack-export.limitPerRequestExceptions') ?? [];
+
+        if (isset($exceptions[$this->route])) {
+            $limit = $exceptions[$$this->route];
+        }
 
         while (true) {
             $client->jsonRequest('POST', $endpointToExport, [
@@ -110,7 +150,7 @@ class ExportJob implements ShouldQueue
                 if ($diffInCounts > 1) {
                     Log::error('Columns and items not matched!', [
                         'route' => $this->route,
-                        'email' => config('backpack.operations.backpack-export.login')
+                        'email' => $this->authUser->email,
                     ]);
                 }
 
@@ -122,7 +162,7 @@ class ExportJob implements ShouldQueue
                     $text = $crawler->filter('span')->last()->count();
                     $data[] = ($text > 0)
                         ?  $crawler->filter('span')->last()->text()
-                        : 'ERROR! Something went wrong.';
+                        : '';
                 }
                 yield $data;
             }
