@@ -22,7 +22,7 @@ class SendEmail extends Mailable
 
         $mail->attach(storage_path($this->filePath));
 
-        Log::channel('domain')->info('BackpackExport Mail: ', [
+        Log::info('BackpackExport Mail: ', [
             'filePath' => $this->filePath,
         ]);
 

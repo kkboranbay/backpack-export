@@ -86,7 +86,7 @@ class ExportJob implements ShouldQueue
 
             $crawler = $client->request('GET', $urlToExport, ['_token' => $token]);
             $columns = $crawler->filter('th[data-column-name]')->each(fn($node) => $node->text());
-            Log::channel('domain')->info('BackpackExport: ', [
+            Log::info('BackpackExport: ', [
                 'columns' => $columns,
             ]);
             
@@ -99,7 +99,7 @@ class ExportJob implements ShouldQueue
             }
             $filePath = "public/$this->fileName.xlsx";
             $excel->saveTo('app/'.$filePath);
-            Log::channel('domain')->info('BackpackExport Save File: ', [
+            Log::info('BackpackExport Save File: ', [
                 'email' => $email,
                 'route' => $this->route,
                 'filePath' => $filePath,
