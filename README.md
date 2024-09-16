@@ -10,11 +10,9 @@ This package is designed to work only for Backpack Pro users.
 
 ## Environment Variables
 
-Add the following variables to your `.env` file. It is necessary to fill in these variables for the package to function correctly:
+Add the following variable to your `.env` file. It is necessary to fill in this variable for the package to function correctly:
 
 ```env
-LOGIN_TO_ADMIN_PANEL=your_admin_panel_login
-PASSWORD_TO_ADMIN_PANEL=your_admin_panel_password
 DISABLE_CSRF_HASH=your_unique_csrf_hash
 ```
 
