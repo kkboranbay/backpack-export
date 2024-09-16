@@ -130,7 +130,7 @@ class ExportJob implements ShouldQueue
         $exceptions = config('backpack.operations.backpack-export.limitPerRequestExceptions') ?? [];
 
         if (isset($exceptions[$this->route])) {
-            $limit = $exceptions[$$this->route];
+            $limit = $exceptions[$this->route];
         }
 
         while (true) {
