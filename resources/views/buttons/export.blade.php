@@ -10,8 +10,34 @@
 					$queryString = http_build_query(request()->query());
 					$exportUrl = url($crud->route.'/export').'?'.$queryString;
 				@endphp
-                <a class="dropdown-item" href="{{ $exportUrl }}">{{ $type }}</a>
+                <a class="dropdown-item backpack-export-link" data-export-url="{{ $exportUrl }}" href="{{ $exportUrl }}">{{ $type }}</a>
 			@endforeach
 		</ul>
 	</div>
 @endif
+
+@push('after_scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const updateExportUrls = () => {
+            const queryString = new URLSearchParams(window.location.search).toString();
+
+			document.querySelectorAll('.backpack-export-link').forEach(link => {
+                const baseUrl = link.dataset.exportUrl.split('?')[0];
+                link.href = `${baseUrl}?${queryString}`;
+            });
+        };
+
+        updateExportUrls();
+
+        let currentUrl = window.location.href;
+        setInterval(() => {
+            const newUrl = window.location.href;
+            if (newUrl !== currentUrl) {
+                currentUrl = newUrl;
+                updateExportUrls();
+            }
+        }, 300);
+    });
+</script>
+@endpush
