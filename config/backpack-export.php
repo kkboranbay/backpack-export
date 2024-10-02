@@ -8,4 +8,5 @@ return [
     'queueConnection' =>  env('QUEUE_CONNECTION', 'database'),
     'onQueue' =>  'default',
     'disableCSRFhash' =>  env('DISABLE_CSRF_HASH', 'some-hash'),
+    'timeout' => 180,
 ];

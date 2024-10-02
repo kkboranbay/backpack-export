@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Kkboranbay\BackpackExport\Mail\SendEmail;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\HttpClient\HttpClient;
 
 class ExportJob implements ShouldQueue
 {
@@ -42,7 +43,10 @@ class ExportJob implements ShouldQueue
     public function handle()
     {
         try {
-            $client = new HttpBrowser();
+            $timeout = config('backpack.operations.backpack-export.http-timeout') ?? 180;
+            $client = new HttpBrowser(HttpClient::create([
+                'timeout' => $timeout,
+            ]));
             $host = rtrim(env('APP_URL'), '/');
             $loginURL = "$host/login";
 
@@ -132,6 +136,8 @@ class ExportJob implements ShouldQueue
         if (isset($exceptions[$this->route])) {
             $limit = $exceptions[$this->route];
         }
+
+        Log::info("Backpack Export: Limit = $limit");
 
         while (true) {
             $client->jsonRequest('POST', $endpointToExport, [

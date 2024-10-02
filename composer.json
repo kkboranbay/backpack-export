@@ -19,7 +19,8 @@
         "php": ">=8.1",
         "backpack/crud": "^5.0|^6.0",
         "avadim/fast-excel-laravel": "^2.7",
-        "symfony/browser-kit": "^6.4"
+        "symfony/browser-kit": "^6.4",
+        "symfony/http-client": "^6.4|^7.0"
     },
     "extra": {
         "laravel": {
