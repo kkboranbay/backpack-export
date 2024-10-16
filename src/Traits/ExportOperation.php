@@ -18,7 +18,6 @@ trait ExportOperation
 
     protected function setupExportDefaults()
     {
-        $this->crud->allowAccess('export');
         $this->crud->operation(['list', 'export'], function () {
             $this->crud->loadDefaultOperationSettingsFromConfig();
             $this->crud->set('export.exportTypes', $this->getExportTypes());

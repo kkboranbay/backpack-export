@@ -65,6 +65,27 @@ To install the package, follow these steps:
     }
     ```
 
+### Usage
+
+
+1. In your CRUD controller, add the `ExportOperation` trait to enable export functionality:
+
+    ```php
+    use \Kkboranbay\BackpackExport\Traits\ExportOperation;
+    ```
+
+2. To control access to the export feature, you can add permission checks in your CRUD controller. For example:
+
+    ```php
+    if (backpack_user() && backpack_user()->can('user-export')) {
+        $this->crud->allowAccess('export');
+    }
+    ```
+
+    This will ensure that only users with the `user-export` permission can see and use the export button.
+
+
+
 ### Troubleshooting
 
 If you encounter any issues:
