@@ -94,10 +94,12 @@ By default every cell is exported as text, so a datetime column ends up as `9 No
     'input-datetime-formats' => null, // null = backpack.base.default_datetime_format; string or array of Carbon isoFormat formats
     'input-date-formats' => null,     // null = backpack.base.default_date_format
     'locale' => null,                 // null = app()->getLocale()
-    'excel-datetime-format' => 'DD.MM.YYYY HH:MM', // Excel number format, e.g. 'YYYY-MM-DD HH:MM'
-    'excel-date-format' => 'DD.MM.YYYY',           // e.g. 'DD-MM-YYYY', 'YYYY-MM-DD'
+    'excel-datetime-format' => 'dd.mm.yyyy hh:mm', // Excel number format, e.g. 'yyyy-mm-dd hh:mm'
+    'excel-date-format' => 'dd.mm.yyyy',           // e.g. 'dd-mm-yyyy', 'yyyy-mm-dd'
 ],
 ```
+
+Write Excel formats in lowercase: Excel accepts `DD.MM.YYYY` too, but Apple Numbers then shows the date as a plain number. Date columns are widened to fit the format.
 
 A cell is converted only when it matches one of the input formats exactly. If a column contains a value with digits that is not a date, the rest of that column is left as text. Columns with a custom `format` in `setupListOperation` need that format added to `input-datetime-formats` / `input-date-formats`.
 

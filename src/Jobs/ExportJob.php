@@ -101,13 +101,24 @@ class ExportJob implements ShouldQueue
 
             $dateFormats = $this->dateFormats();
             $notDateColumns = [];
+            $dateColumnWidths = [];
 
             foreach ($this->fetchData($client, $endpointToExport, $columns) as $rowData) {
                 $cellStyles = null;
                 if ($dateFormats) {
                     [$rowData, $cellStyles] = $this->convertDates($rowData, $dateFormats, $notDateColumns);
+                    foreach ($cellStyles ?? [] as $index => $style) {
+                        $dateColumnWidths[$index] = max($dateColumnWidths[$index] ?? 0, mb_strlen($style['format']) + 2);
+                    }
                 }
                 $sheet->writeRow($rowData, ['height' => 20], $cellStyles);
+            }
+
+            // Widen date columns, otherwise Excel shows "#####" for dates that do not fit.
+            // Set in column order: the writer keeps insertion order and Excel requires sorted <col> elements.
+            ksort($dateColumnWidths);
+            foreach ($dateColumnWidths as $index => $width) {
+                $sheet->setColWidth($index + 1, $width, true);
             }
             $filePath = "public/$this->fileName.xlsx";
             $excel->saveTo('app/'.$filePath);
@@ -150,10 +161,10 @@ class ExportJob implements ShouldQueue
 
         $formats = [];
         foreach ((array) $datetimeFormats as $format) {
-            $formats[] = ['input' => $format, 'dateOnly' => false, 'excel' => $config['excel-datetime-format'] ?? 'DD.MM.YYYY HH:MM'];
+            $formats[] = ['input' => $format, 'dateOnly' => false, 'excel' => $config['excel-datetime-format'] ?? 'dd.mm.yyyy hh:mm'];
         }
         foreach ((array) $dateFormats as $format) {
-            $formats[] = ['input' => $format, 'dateOnly' => true, 'excel' => $config['excel-date-format'] ?? 'DD.MM.YYYY'];
+            $formats[] = ['input' => $format, 'dateOnly' => true, 'excel' => $config['excel-date-format'] ?? 'dd.mm.yyyy'];
         }
 
         return array_filter($formats, fn($format) => !empty($format['input']));

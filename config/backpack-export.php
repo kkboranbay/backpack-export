@@ -18,8 +18,9 @@ return [
         'input-date-formats' => null,
         // Locale of month names in the list. null = app()->getLocale().
         'locale' => null,
-        // How dates are displayed in Excel (Excel number format codes), e.g. 'YYYY-MM-DD HH:MM', 'DD-MM-YYYY'.
-        'excel-datetime-format' => 'DD.MM.YYYY HH:MM',
-        'excel-date-format' => 'DD.MM.YYYY',
+        // How dates are displayed in Excel (Excel number format codes), e.g. 'yyyy-mm-dd hh:mm', 'dd-mm-yyyy'.
+        // Use lowercase: Apple Numbers shows uppercase codes like 'DD.MM.YYYY' as a plain number.
+        'excel-datetime-format' => 'dd.mm.yyyy hh:mm',
+        'excel-date-format' => 'dd.mm.yyyy',
     ],
 ];
