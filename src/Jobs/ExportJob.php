@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use avadim\FastExcelLaravel\Excel;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Hash;
@@ -98,8 +99,15 @@ class ExportJob implements ShouldQueue
             $sheet = $excel->sheet();
             $sheet->writeRow($columns);
 
+            $dateFormats = $this->dateFormats();
+            $notDateColumns = [];
+
             foreach ($this->fetchData($client, $endpointToExport, $columns) as $rowData) {
-                $sheet->writeRow($rowData, ['height' => 20]);
+                $cellStyles = null;
+                if ($dateFormats) {
+                    [$rowData, $cellStyles] = $this->convertDates($rowData, $dateFormats, $notDateColumns);
+                }
+                $sheet->writeRow($rowData, ['height' => 20], $cellStyles);
             }
             $filePath = "public/$this->fileName.xlsx";
             $excel->saveTo('app/'.$filePath);
@@ -124,6 +132,81 @@ class ExportJob implements ShouldQueue
             ]);
             throw $exception;
         }
+    }
+
+    /**
+     * Input formats (Carbon isoFormat) to recognize, mapped to the Excel format to write them with.
+     * Empty when date conversion is disabled.
+     */
+    protected function dateFormats(): array
+    {
+        $config = config('backpack.operations.backpack-export.convert-dates') ?? [];
+        if (empty($config['enabled'])) {
+            return [];
+        }
+
+        $datetimeFormats = $config['input-datetime-formats'] ?? config('backpack.base.default_datetime_format');
+        $dateFormats = $config['input-date-formats'] ?? config('backpack.base.default_date_format');
+
+        $formats = [];
+        foreach ((array) $datetimeFormats as $format) {
+            $formats[] = ['input' => $format, 'dateOnly' => false, 'excel' => $config['excel-datetime-format'] ?? 'DD.MM.YYYY HH:MM'];
+        }
+        foreach ((array) $dateFormats as $format) {
+            $formats[] = ['input' => $format, 'dateOnly' => true, 'excel' => $config['excel-date-format'] ?? 'DD.MM.YYYY'];
+        }
+
+        return array_filter($formats, fn($format) => !empty($format['input']));
+    }
+
+    /**
+     * Replaces date-looking cells with 'Y-m-d H:i:s' values and returns per-cell Excel formats for them.
+     * A column with a value that is not a date is not checked again, to keep large exports fast.
+     */
+    protected function convertDates(array $row, array $formats, array &$notDateColumns): array
+    {
+        $locale = config('backpack.operations.backpack-export.convert-dates.locale') ?? app()->getLocale();
+        $cellStyles = [];
+
+        foreach ($row as $index => $value) {
+            if (isset($notDateColumns[$index]) || !is_string($value) || !preg_match('/\d/', $value)) {
+                continue;
+            }
+
+            $converted = $this->parseDate($value, $formats, $locale);
+            if ($converted === null) {
+                $notDateColumns[$index] = true;
+                continue;
+            }
+
+            $row[$index] = $converted['value'];
+            $cellStyles[$index] = ['format' => $converted['excel']];
+        }
+
+        return [$row, $cellStyles ?: null];
+    }
+
+    protected function parseDate(string $value, array $formats, string $locale): ?array
+    {
+        foreach ($formats as $format) {
+            try {
+                $date = Carbon::createFromLocaleIsoFormat($format['input'], $locale, $value);
+            } catch (\Throwable) {
+                continue;
+            }
+
+            // Reject overflowed dates like "31 фев" and partial matches.
+            if ($date->locale($locale)->isoFormat($format['input']) !== $value) {
+                continue;
+            }
+
+            return [
+                'value' => $format['dateOnly'] ? $date->format('Y-m-d') : $date->format('Y-m-d H:i:s'),
+                'excel' => $format['excel'],
+            ];
+        }
+
+        return null;
     }
 
     protected function fetchData($client, $endpointToExport, $columns)

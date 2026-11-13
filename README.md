@@ -84,6 +84,23 @@ To install the package, follow these steps:
 
     This will ensure that only users with the `user-export` permission can see and use the export button.
 
+### Dates as Excel dates
+
+By default every cell is exported as text, so a datetime column ends up as `9 Nov 2026, 22:50` text in Excel. To export such cells as real Excel dates (sortable and filterable), enable `convert-dates` in `config/backpack/operations/backpack-export.php`:
+
+```php
+'convert-dates' => [
+    'enabled' => true,
+    'input-datetime-formats' => null, // null = backpack.base.default_datetime_format; string or array of Carbon isoFormat formats
+    'input-date-formats' => null,     // null = backpack.base.default_date_format
+    'locale' => null,                 // null = app()->getLocale()
+    'excel-datetime-format' => 'DD.MM.YYYY HH:MM', // Excel number format, e.g. 'YYYY-MM-DD HH:MM'
+    'excel-date-format' => 'DD.MM.YYYY',           // e.g. 'DD-MM-YYYY', 'YYYY-MM-DD'
+],
+```
+
+A cell is converted only when it matches one of the input formats exactly. If a column contains a value with digits that is not a date, the rest of that column is left as text. Columns with a custom `format` in `setupListOperation` need that format added to `input-datetime-formats` / `input-date-formats`.
+
 
 
 ### Troubleshooting
